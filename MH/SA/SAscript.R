@@ -125,7 +125,7 @@ for(instancia in 1:11)
             #hago swap de un numero empezando desde el principio
             for(i in 1:length(sample1)){
                 #Crea un nuevo vecino que es el swap de la posición entre 1 a 10 y un numero aleatorio de todos los posibles
-                neighbor <- getNeighbor(insertion, sol, i, sample1[i])
+                neighbor <- getNeighbor(reverse, sol, i, sample1[i])
                 #Evalua la nueva funcion
                 evaluatedNeighbor <- evaluarQAP(neighbor, QAP$f, QAP$d)
                 #Si lo acepta, entonces cambia de solución
@@ -151,7 +151,7 @@ for(instancia in 1:11)
         print(paste(instancia, " ", T))
     }
     #Para este momento ya deberia tener una solución aceptable en la variable sol y todos los obtenidos en soles
-    jpeg(paste("img/insertion/", "instance", toString(instancia), ".jpeg", sep=""))
+    jpeg(paste("img/reverse/", "instance", toString(instancia), ".jpeg", sep=""))
     plot(evaluatedSoles, main=paste("Instancia", toString(instancia)), xlab="Iteraciones", ylab="Valores")
     lines(bestEvaluatedSol)
     dev.off()
@@ -164,8 +164,8 @@ for(instancia in 1:11)
     evaluatedSoles <- c()
     bestEvaluatedSol <- c()
 }
-jpeg("img/insertion/AllTogetherGraph.jpeg")
-plot(AllTogetherGraph, main=paste("Instancia", toString(instancia)), xlab="Iteraciones", ylab="Valores")
+jpeg("img/reverse/AllTogetherGraph.jpeg")
+plot(AllTogetherGraph, main=paste("All intances together", toString(instancia)), xlab="Iteraciones", ylab="Valores")
 dev.off()
 
 
@@ -179,6 +179,6 @@ dimnames(summaryMatrix) = list(
     )
 
 # Se guarda el archivo en formato latex, LOS RESULTADOS ESTAN DIVIDIDOS EN 10K PARA MEJOR VISUALIZACION 
-print(xtable(floor(summaryMatrix/10000), type = "latex"), file = "tablaVecindad/Insertion.tex")
+print(xtable(floor(summaryMatrix/10000), type = "latex"), file = "tablaVecindad/Reverse.tex")
 
-write.table(toString(sol), "tablaVecindad/BestSolutionInsertion.txt", sep="\t")
+write.table(toString(sol), "tablaVecindad/BestSolutionReverse.txt", sep="\t")
