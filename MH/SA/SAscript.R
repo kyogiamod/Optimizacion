@@ -1,4 +1,6 @@
-readQAP<-function(name){ 
+library(xtable)
+
+readQAP <- function(name) { 
 a <- read.delim(name,header=FALSE, sep ="")
 n<-as.integer(a[1,1])
 fl<-a[2:(n+1),1:n]
@@ -9,11 +11,12 @@ return(d)
 
 evaluarQAP <- function(sol, f, d){
   acum <- 0
-  for(i in 1:n){
-    for(j in 1:n){
+  for(i in 1:(length(sol))){
+    for(j in 1:(length(sol))){
       acum = acum + f[i,j]*d[sol[i],sol[j]]   
     }
   }
+  #print(paste(sol))
   return(acum)
 }
 
@@ -33,11 +36,18 @@ swap <- function(sol,i,j)
 # inse <- insertion(s,2,4)
 # print(inse)
 insertion <- function(sol, i, j){
+    if(j < i) 
+    {
+        a <- i
+        i <- j
+        j <- a 
+    }
+    if (j == i) { return (sol) }
     aux1 <- sol[i]
     sol[i] <- sol[j]
-    for(i in i:(j-1)){
-        aux2 <- sol[i+1]
-        sol[i+1] <- aux1
+    for(pos in i:(j-1)){
+        aux2 <- sol[pos+1]
+        sol[pos+1] <- aux1
         aux1 <- aux2
     }
     return (sol)
@@ -53,7 +63,6 @@ reverse <- function(sol, i, j){
         aux <- sol[i]
         sol[i] <- sol[(j-pos+1)]
         sol[j-pos+1] <- aux
-        print(sol)
     }
   return (sol)
 }
@@ -64,25 +73,19 @@ getNeighbor <- function(neighborFunc, sol, i, j){
 }
 
 probabilityFunction <- function(fs1, fs2, temp){
-    print( temp )
     return ( exp( (fs1-fs2)/temp ) )
 }
 
 acceptSolution <- function(originalSolEvaluated, newSolEvaluated, temp){
     fs1 <- originalSolEvaluated
     fs2 <- newSolEvaluated
-
-    #print(cat(fs2, "<", fs1))
     if( fs2 < fs1 ){ 
-        #print("fs2 < fs1")
         return (TRUE) 
     } else {
         pf <- probabilityFunction(fs1, fs2, temp)
         random <- runif(1,0,1)
-        #print(cat(random, " ", pf))
 
         if ( random < pf ){
-            #print("random < pf")
             return (TRUE)
         }
     }
@@ -94,16 +97,17 @@ acceptSolution <- function(originalSolEvaluated, newSolEvaluated, temp){
 ################# MAIN ####################
 set.seed(0)
 
-
 QAP <- readQAP("bur26a.dat")
 ## Constantes
-Tmax <- 10000000
-ItMax <- 250
+Tmax <- 1000000
+ItMax <- 200
 evaluatedSoles <- c()
 bestEvaluatedSol <- c()
+summaries <- c()
+AllTogetherGraph <- c()
 
 # Generate initial solution
-for(instancia in 1:1)
+for(instancia in 1:11)
 {
     sol <- sample(1:QAP$n)
     evaluatedSol <- evaluarQAP(sol, QAP$f, QAP$d)
@@ -121,7 +125,7 @@ for(instancia in 1:1)
             #hago swap de un numero empezando desde el principio
             for(i in 1:length(sample1)){
                 #Crea un nuevo vecino que es el swap de la posición entre 1 a 10 y un numero aleatorio de todos los posibles
-                neighbor <- getNeighbor(swap, sol, i, sample1[i])
+                neighbor <- getNeighbor(insertion, sol, i, sample1[i])
                 #Evalua la nueva funcion
                 evaluatedNeighbor <- evaluarQAP(neighbor, QAP$f, QAP$d)
                 #Si lo acepta, entonces cambia de solución
@@ -144,12 +148,37 @@ for(instancia in 1:1)
         It <- It + 1
         ItLocal <- 1
         if(T < 1 || It == ItMax) {  stopCondition <- FALSE }
-        #print(It)
+        print(paste(instancia, " ", T))
     }
-
     #Para este momento ya deberia tener una solución aceptable en la variable sol y todos los obtenidos en soles
-    plot(evaluatedSoles)
+    jpeg(paste("img/insertion/", "instance", toString(instancia), ".jpeg", sep=""))
+    plot(evaluatedSoles, main=paste("Instancia", toString(instancia)), xlab="Iteraciones", ylab="Valores")
     lines(bestEvaluatedSol)
-    print(summary(evaluatedSoles))
-    print(probabilityValue)
+    dev.off()
+    
+    #Se guarda el summary en la lista de summaries
+    summaries <- c(summaries, summary(evaluatedSoles))
+
+    AllTogetherGraph <- c(AllTogetherGraph, evaluatedSoles)
+    #Resetear las variables para que sea una nueva instancia
+    evaluatedSoles <- c()
+    bestEvaluatedSol <- c()
 }
+jpeg(AllTogetherGraph)
+plot(AllTogetherGraph, main=paste("Instancia", toString(instancia)), xlab="Iteraciones", ylab="Valores")
+dev.off()
+
+
+
+#Una vez finalizado, summaries contiene toda la info de las 11 iteraciones. Se pasa a matrix:
+summaryMatrix <- matrix(summaries, nrow=11, ncol=6)
+
+dimnames(summaryMatrix) = list(
+    c("IT 1","IT 2","IT 3","IT 4","IT 5","IT 6","IT 7","IT 8","IT 9","IT 10","IT 11"), 
+    c("Min","1Q","Median","Mean","3Q","Max")
+    )
+
+# Se guarda el archivo en formato latex, LOS RESULTADOS ESTAN DIVIDIDOS EN 10K PARA MEJOR VISUALIZACION 
+print(xtable(floor(summaryMatrix/10000), type = "latex"), file = "tablaVecindad/Insertion.tex")
+
+write.table(toString(sol), "tablaVecindad/BestSolutionInsertion.txt", sep="\t")
