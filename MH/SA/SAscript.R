@@ -164,7 +164,7 @@ for(instancia in 1:11)
     evaluatedSoles <- c()
     bestEvaluatedSol <- c()
 }
-jpeg(AllTogetherGraph)
+jpeg("img/insertion/AllTogetherGraph.jpeg")
 plot(AllTogetherGraph, main=paste("Instancia", toString(instancia)), xlab="Iteraciones", ylab="Valores")
 dev.off()
 
