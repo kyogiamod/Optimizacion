@@ -109,7 +109,7 @@ for(it in 1:10){
     #Le agrega el valor de la fo
     neighbors <- cbind(neighbors, evaluatedNeighbors)
     #Los ordena de menor a mayor
-    neighbors[order(neighbors[,29]),]
+    neighbors <- neighbors[order(neighbors[,29]),]
 
     #Recorrer de mejor valor a peor
     for(e in 1:nrow(neighbors)){
