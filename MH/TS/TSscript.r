@@ -31,18 +31,20 @@ getNeighbor <- function(sol, i, j){
 }
 
 getNeighbors <- function(sol, posi, posj){
-    neighbors <- matrix(nrow=((length(sol)-3)*(length(sol)-2)/2), ncol=(length(sol)+2)) #el +2 es pra poner el switch que se hizo
-    posNeighbors <- 1
+    #neighbors <- matrix(nrow=((length(sol)-3)*(length(sol)-2)/2), ncol=(length(sol)+2)) #el +2 es pra poner el switch que se hizo
+    neighbors <- matrix(nrow=0, ncol=(length(sol)+2)) #el +2 es pra poner el switch que se hizo
+    len <- length(sol)
     for(i in 1:length(sol)){
+        if (runif(1,0,1) > 0.33) { next }
         if(i == posi || i==posj) { next }
         if((i+1) > length(sol)) { break }
         for(j in (i+1):length(sol))
         {
+            if( runif(1,0,1) > 0.33) { next }
             if(j==posi || j == posj) { next }
             neig <- getNeighbor(sol,i,j)
             neig <- c(neig, i, j) #Para guardar las posiciones de switch
-            neighbors[posNeighbors,] <- neig
-            posNeighbors <- posNeighbors + 1
+            neighbors <- rbind(neighbors, neig)
         }
     }
     return (neighbors)
@@ -98,8 +100,10 @@ evaluatedSol <- evaluateQAP(sol, QAP$f, QAP$d)
 values <- c(evaluatedSol)
 bestConfigSol <- sol
 bestEvaluatedSol <- evaluatedSol
+bestEvaluatedSoles <- c(evaluatedSol)
 
-for(it in 1:10){
+for(it in 1:100){
+    print(it)
     #get 2 random numbers to set them and swap the others
     setPosition <- sample(1:QAP$n, 2)
     #get neighbors
@@ -114,12 +118,8 @@ for(it in 1:10){
     #Recorrer de mejor valor a peor
     for(e in 1:nrow(neighbors)){
         neigh <- neighbors[e,]
-        #print("neigh: ")
-        #print(neigh[1:28])
         ant <- acceptNeighborTabu(neigh, tabuStruct) 
-        #print(paste("ant: ", ant))
         ana <- acceptNeighborAspiration(neigh, bestEvaluatedSol)
-        #print(paste("ana: ", ana))
         if ( ant || ana ){
             values <- c(values, neigh[29])
             #Si se acepta, entonces hay que actualizar tabuStruct y cambiar los valores
@@ -127,14 +127,22 @@ for(it in 1:10){
             #print(sol)
             i <- neigh[27]
             j <- neigh[28]
-            tabuStruct[i,j] <- 3 #el tabu dura 3 iteraciones
-            if( ana ){ #Si fue aceptado por aspiracion
-                bestEvaluatedSol <- neigh[29]
-                bestConfigSol <- neigh[1:26]
+            tabuStruct[i,j] <- 20 #el tabu dura 20 iteraciones
+            if ( neigh[29] < bestEvaluatedSol ) { #Si es que hay un nuevo mejor:
+                bestConfigSol <- neigh[1:26] #Se guarda su configuracion
+                bestEvaluatedSol <- neigh[29] #Se guarda el valor de la config
+                bestEvaluatedSoles <- c(bestEvaluatedSoles, bestEvaluatedSol) #Se agrega como nuevo valor
+            } else { #Si el vecino no es mejor, se sigue con la anterior
+                bestEvaluatedSoles <- c(bestEvaluatedSoles, tail(bestEvaluatedSoles,1))
             }
-            break
+            #Como ya esta fue aceptado, no hay que seguir con otros vecinos 
+            break 
         }
     }
     tabuStruct <- updateTabuStruct(tabuStruct)
 }
 
+jpeg("img/valuesTS.jpeg")
+plot(values, main="Valores obtenidos con TS", xlab="Iteraciones", ylab="Valores")
+lines(bestEvaluatedSoles)
+dev.off()
