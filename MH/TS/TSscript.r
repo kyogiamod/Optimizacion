@@ -87,6 +87,29 @@ updateTabuStruct <- function(tabuStruct){
     return (tabuStruct)
 }
 
+updateMatrixTabu <- function(matrixTabu, posToResetTabuFrequency, solActual){
+    for(i in 1:length(solActual)){
+        j <- solActual[i]
+        matrixTabu[i,j] <- matrixTabu[i,j] + 1
+    }
+    i <- posToResetTabuFrequency[1]
+    j <- posToResetTabuFrequency[2]
+    matrixTabu[i,j] <- 0
+    return (matrixTabu)
+}
+
+getBestFeature <- function(matrixTabu){
+    pos <- which(matrixTabu==max(matrixTabu), arr.ind=TRUE) #Da el index
+    pos <- pos[sample(nrow(pos),1),] #Escoge una posicion al azar
+    return (pos)
+}
+
+getLowestFrequency <- function(matrixTabu){
+    pos <- which(matrixTabu==min(matrixTabu), arr.ind=TRUE) #Da la posicion
+    pos <- pos[sample(nrow(pos),1),] #Escoge una posicion al azar
+    return (pos)
+}
+
 ################# MAIN ####################
 set.seed(0)
 
@@ -102,8 +125,9 @@ bestConfigSol <- sol
 bestEvaluatedSol <- evaluatedSol
 bestEvaluatedSoles <- c(evaluatedSol)
 
-for(it in 1:100){
-    print(it)
+matrixTabu <- matrix( rep( 0, len=(QAP$n)^2), nrow = QAP$n)
+
+for(it in 1:250){
     #get 2 random numbers to set them and swap the others
     setPosition <- sample(1:QAP$n, 2)
     #get neighbors
@@ -115,6 +139,10 @@ for(it in 1:100){
     #Los ordena de menor a mayor
     neighbors <- neighbors[order(neighbors[,29]),]
 
+
+    #Posicion a resetear en la frecuencia
+    posToResetTabuFrequency <- c()
+
     #Recorrer de mejor valor a peor
     for(e in 1:nrow(neighbors)){
         neigh <- neighbors[e,]
@@ -124,9 +152,9 @@ for(it in 1:100){
             values <- c(values, neigh[29])
             #Si se acepta, entonces hay que actualizar tabuStruct y cambiar los valores
             sol <- neigh[1:26]
-            #print(sol)
             i <- neigh[27]
             j <- neigh[28]
+            posToResetTabuFrequency <- c(i,j)
             tabuStruct[i,j] <- 20 #el tabu dura 20 iteraciones
             if ( neigh[29] < bestEvaluatedSol ) { #Si es que hay un nuevo mejor:
                 bestConfigSol <- neigh[1:26] #Se guarda su configuracion
@@ -140,9 +168,26 @@ for(it in 1:100){
         }
     }
     tabuStruct <- updateTabuStruct(tabuStruct)
+    matrixTabu <- updateMatrixTabu(matrixTabu, posToResetTabuFrequency, sol)
+    if(it %% 15 == 0){ #Cada 15 iteraciones, intensificar
+        print("Intensificando")
+        sol <- bestConfigSol #se devuelve a la mejor solucion
+        pos <- getBestFeature(matrixTabu) #Se tiene la posicion y el numero
+        indexToSwitch <- which(sol==pos[2])
+        sol <- swap(sol, indexToSwitch, pos[1])
+    }
+    if(it %% 50 == 0){ #Diversificar
+        print("diversificando")
+        pos <- getLowestFrequency(matrixTabu)
+        indexToSwitch <- which(sol==pos[2])
+        sol <- swap(sol, indexToSwitch, pos[1])
+        matrixTabu[sort(c(pos[1], indexToSwitch))] <- matrixTabu[sort(c(pos[1], indexToSwitch))] + 1
+    }
 }
 
 jpeg("img/valuesTS.jpeg")
-plot(values, main="Valores obtenidos con TS", xlab="Iteraciones", ylab="Valores")
-lines(bestEvaluatedSoles)
+plot(bestEvaluatedSoles, type="h", col="black", main="Valores TS con intensificacion y diversificacion", xlab="Iteraciones",ylab="Valores")
+lines(values, type="p", lwd=1)
+abline(v=c(15,30,45,60,75,90,105,120,135,150,165,180,195,210,225,240), col="blue")
+abline(v=c(50,100,150,200), col="red")
 dev.off()
