@@ -185,9 +185,12 @@ for(it in 1:250){
     }
 }
 
-jpeg("img/valuesTS.jpeg")
+jpeg("img/valuesTS-IntDiv.jpeg")
 plot(bestEvaluatedSoles, type="h", col="black", main="Valores TS con intensificacion y diversificacion", xlab="Iteraciones",ylab="Valores")
 lines(values, type="p", lwd=1)
 abline(v=c(15,30,45,60,75,90,105,120,135,150,165,180,195,210,225,240), col="blue")
 abline(v=c(50,100,150,200), col="red")
 dev.off()
+
+write.table(toString(bestConfigSol), "data/INTDIV-bestConfigurationSolution.txt", sep="\t")
+write.table(bestEvaluatedSol, "data/INTDIV-bestEvaluatedSolution.txt", sep="\t")
