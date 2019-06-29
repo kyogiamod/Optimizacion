@@ -11,7 +11,7 @@ data$Class <- as.factor(data$Class)
 finalData <- data[,-c(2,4,5,8)]
 
 #Se divide en 3 grupos y se hace el benchmark de lo que demora
-times <- microbenchmark(clusters <- pam(finalData, diss = FALSE, k = 3), times=15)
+times <- microbenchmark(clusters <- pam(finalData, diss = FALSE, k = 3), times=1)
 write.table(t(c(summary(times$time)))[1,], "ExectTimeB.txt")
 
 jpeg("img/big/kmeansB.jpeg")
