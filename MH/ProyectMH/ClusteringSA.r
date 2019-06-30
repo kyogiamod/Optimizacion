@@ -76,6 +76,7 @@ getNeighbor <- function(neighborFunc, vectorSol, i, j){
 }
 
 probabilityFunction <- function(fs1, fs2, temp){
+    print(exp( (fs1-fs2)/temp ))
     return ( exp( (fs1-fs2)/temp ) )
 }
 
@@ -107,7 +108,7 @@ data <- dataSeeds[,-c(2,4,5,8)]
 ## Constantes
 Tmax <- 10000
 ItMax <- 100
-alpha <- 0.5
+alpha <- 0.85
 tamano <- "big"
 evaluatedSoles <- c()
 bestEvaluatedSol <- c()
@@ -139,9 +140,14 @@ while(stopCondition)
     {
         ItLocal = ItLocal + 1
         #Take 2 samples
-        sample1 <- sample(1:dataQuantity, 2)
+        if(sqrt(dataQuantity) %% 1) { lenSample <- sqrt(dataQuantity)-1 }
+        else { lenSample <- sqrt(dataQuantity) }
+        sample1 <- sample(1:dataQuantity, lenSample)
         #Get neighbor swapping the two values of sample1
-        neighbor <- getNeighbor(swap, vectorSol, sample1[1], sample1[2])
+        for(i in seq(1,lenSample, by=2)) {
+            neighbor <- getNeighbor(swap, vectorSol, sample1[i], sample1[i+1])
+        }
+        
         #Evaluate new solution
         data[,5] <- neighbor
         evaluatedNeighbor <- evaluate(data)
