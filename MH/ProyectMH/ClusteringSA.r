@@ -100,15 +100,15 @@ acceptSolution <- function(originalSolEvaluated, newSolEvaluated, temp){
 ################# MAIN ####################
 set.seed(0)
 
-dataSeeds <- readSeeds("seedsS.txt")
+dataSeeds <- readSeeds("seedB.txt")
 #Por análisis estadistico previo, se eliminan algunas columnas
 data <- dataSeeds[,-c(2,4,5,8)]
 
 ## Constantes
 Tmax <- 10000
-ItMax <- 1000
+ItMax <- 100
 alpha <- 0.5
-tamano <- "small"
+tamano <- "big"
 evaluatedSoles <- c()
 bestEvaluatedSol <- c()
 dataQuantity <- nrow(data)
@@ -140,8 +140,6 @@ while(stopCondition)
         ItLocal = ItLocal + 1
         #Take 2 samples
         sample1 <- sample(1:dataQuantity, 2)
-            #hago swap de un numero empezando desde el principio
-            #for(i in 1:length(sample1)){
         #Get neighbor swapping the two values of sample1
         neighbor <- getNeighbor(swap, vectorSol, sample1[1], sample1[2])
         #Evaluate new solution
@@ -199,6 +197,10 @@ plot(fviz_cluster(object = sa_clusters, data = data, show.clust.cent = TRUE, ell
 )
 dev.off()
 
-write.table(t(vectorSol), paste("data/",tamano,"/vectorSolT", Tmax, "alpha", alpha, ".txt", sep=""))
-write.table(evaluatedSol, paste("data/",tamano,"/valueSolT", Tmax, "alpha", alpha, ".txt", sep=""))
-write.table(exectTime, paste("data/",tamano,"/execTime", Tmax, "alpha", alpha, ".txt", sep=""))
+
+#exect time
+write.table(exectTime, paste("data/", tamano, Tmax, "alpha", alpha, ".txt", sep=""), append = FALSE, row.names=F, col.names=F)
+# value sol
+write.table(evaluatedSol, paste("data/", tamano, Tmax, "alpha", alpha, ".txt", sep=""), append = TRUE, row.names=F, col.names=F)
+#vector sol
+write.table(vectorSol, paste("data/", tamano, Tmax, "alpha", alpha, ".txt", sep=""), append = TRUE, row.names=F, col.names=F)
