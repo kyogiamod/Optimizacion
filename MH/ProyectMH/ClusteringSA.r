@@ -1,24 +1,20 @@
 library(xtable)
 library(cluster)
 library(factoextra)
+library(tictoc)
 
 readSeeds <- function(name){
     a <- read.delim(name, header=FALSE, sep="")
-    colnames(a) <- c("Area","Perimeter","Compatness","LoK","WoK","Asymmetry","LoKG","Class")
+    colnames(a) <- c("area","perimeter","compactness","LoK","WoK","asymmetry","LoKG","class")
     return (a)
 }
 
 # Funcion : swap
-swap <- function(matrixSol,i,j){
-    if( i > j ) {
-        p <- i
-        i <- j
-        j <- p
-    } 
-    piv <- matrixSol[i,]
-    matrixSol[i,] <- matrixSol[j,]
-    matrixSol[j,] <- piv
-    return(matrixSol)
+swap <- function(vectorSol,i,j){
+    piv <- vectorSol[i]
+    vectorSol[i] <- vectorSol[j]
+    vectorSol[j] <- piv
+    return(vectorSol)
 }
 
 
@@ -34,68 +30,24 @@ euclideanDistance <- function(data, mean){
             )
 }
 
-#matrixSol: matrix of #(cluster) columns, in this case is 3
-evaluate <- function(matrixSol, data){
-    #Se generan los cluster
-    c1IDs <- c()
-    c2IDs <- c()
-    c3IDs <- c()
-    for(i in 1:(length(matrixSol)/3)){
-        aux <- matrixSol[i,]
-        if(aux[1] == 1) { c1IDs <- c(c1IDs, i) }
-        else if(aux[2] == 1) { c2IDs <- c(c2IDs, i) }
-        else { c3IDs <- c(c3IDs, i) } 
-    }
-    centroid11 <- 0
-    centroid12 <- 0
-    centroid13 <- 0
-    centroid14 <- 0
+evaluate <- function(data){
+    #Se separan por clusters
+    dataCluster <- split(data, data$cluster)
 
-    centroid21 <- 0
-    centroid22 <- 0
-    centroid23 <- 0
-    centroid24 <- 0
+    centroid11 <- summary(dataCluster$"1"$area)[[4]]
+    centroid12 <- summary(dataCluster$"1"$compactness)[[4]]
+    centroid13 <- summary(dataCluster$"1"$asymmetry)[[4]]
+    centroid14 <- summary(dataCluster$"1"$LoKG)[[4]]
 
-    centroid31 <- 0
-    centroid32 <- 0
-    centroid33 <- 0
-    centroid34 <- 0
+    centroid21 <- summary(dataCluster$"2"$area)[[4]]
+    centroid22 <- summary(dataCluster$"2"$compactness)[[4]]
+    centroid23 <- summary(dataCluster$"2"$asymmetry)[[4]]
+    centroid24 <- summary(dataCluster$"2"$LoKG)[[4]]
 
-    for(e in c1IDs) {
-        centroid11 <- centroid11 + data[e, 1]
-        centroid12 <- centroid12 + data[e, 2]
-        centroid13 <- centroid13 + data[e, 3]
-        centroid14 <- centroid14 + data[e, 4]
-    }
-
-    for(e in c2IDs) {
-        centroid21 <- centroid21 + data[e, 1]
-        centroid22 <- centroid22 + data[e, 2]
-        centroid23 <- centroid23 + data[e, 3]
-        centroid24 <- centroid24 + data[e, 4]
-    }
-
-    for(e in c3IDs) {
-        centroid31 <- centroid31 + data[e, 1]
-        centroid32 <- centroid32 + data[e, 2]
-        centroid33 <- centroid33 + data[e, 3]
-        centroid34 <- centroid34 + data[e, 4]
-    }
-
-    centroid11 <- centroid11/length(c1IDs)
-    centroid12 <- centroid12/length(c1IDs)
-    centroid13 <- centroid13/length(c1IDs)
-    centroid14 <- centroid14/length(c1IDs)
-
-    centroid21 <- centroid21/length(c2IDs)
-    centroid22 <- centroid22/length(c2IDs)
-    centroid23 <- centroid23/length(c2IDs)
-    centroid24 <- centroid24/length(c2IDs)
-
-    centroid31 <- centroid31/length(c3IDs)
-    centroid32 <- centroid32/length(c3IDs)
-    centroid33 <- centroid33/length(c3IDs)
-    centroid34 <- centroid34/length(c3IDs)
+    centroid31 <- summary(dataCluster$"3"$area)[[4]]
+    centroid32 <- summary(dataCluster$"3"$compactness)[[4]]
+    centroid33 <- summary(dataCluster$"3"$asymmetry)[[4]]
+    centroid34 <- summary(dataCluster$"3"$LoKG)[[4]]
 
     c1 <- c(centroid11, centroid12, centroid13, centroid14)
     c2 <- c(centroid21, centroid22, centroid23, centroid24)
@@ -106,21 +58,21 @@ evaluate <- function(matrixSol, data){
     sumC2 <- 0
     sumC3 <- 0
 
-    for(e in c1IDs){
-        sumC1 <- sumC1 + euclideanDistance(data[e,], c1)
+    for(pos in 1:nrow(dataCluster$"1")){
+        sumC1 <- sumC1 + euclideanDistance(dataCluster$"1"[pos,], c1)
     }
-    for(e in c2IDs){
-        sumC2 <- sumC2 + euclideanDistance(data[e,], c2)
+    for(pos in 1:nrow(dataCluster$"2")){
+        sumC2 <- sumC2 + euclideanDistance(dataCluster$"2"[pos,], c2)
     }
-    for(e in c3IDs){
-        sumC3 <- sumC3 + euclideanDistance(data[e,], c3)
+    for(pos in 1:nrow(dataCluster$"3")){
+        sumC3 <- sumC3 + euclideanDistance(dataCluster$"3"[pos,], c3)
     }
 
     return(sumC1+sumC2+sumC3)
 }
 
-getNeighbor <- function(neighborFunc, matrixSol, i, j){
-    return (neighborFunc(matrixSol,i,j))
+getNeighbor <- function(neighborFunc, vectorSol, i, j){
+    return (neighborFunc(vectorSol,i,j))
 }
 
 probabilityFunction <- function(fs1, fs2, temp){
@@ -148,53 +100,55 @@ acceptSolution <- function(originalSolEvaluated, newSolEvaluated, temp){
 ################# MAIN ####################
 set.seed(0)
 
-dataSeeds <- readSeeds("seeds210.txt")
+dataSeeds <- readSeeds("seedsS.txt")
 #Por análisis estadistico previo, se eliminan algunas columnas
-dataSeeds <- dataSeeds[,-c(2,4,5)]
-
-#Se pasa a variable categorica la clase
-dataSeeds$Class <- as.factor(dataSeeds$Class)
-data <- dataSeeds[,-c(5)]
-
+data <- dataSeeds[,-c(2,4,5,8)]
 
 ## Constantes
 Tmax <- 10000
 ItMax <- 500
+alpha <- 0.5
 evaluatedSoles <- c()
 bestEvaluatedSol <- c()
-dataQuantity <- 210
-
+dataQuantity <- nrow(data)
 
 # Generate initial solution
 vectorSol <- c()
 for(i in 1:dataQuantity){
-    vectorSol <- c(vectorSol, sample(c(0,0,1)))
+    vectorSol <- c(vectorSol, sample(c(1,2,3), 1))
 }
-matrixSol <- matrix(vectorSol, nrow=dataQuantity, ncol=3, byrow=TRUE)
-evaluatedSol <- evaluate(matrixSol, data)
+#Se agrega la columna de que cluster pertenece
+data <- cbind(data, vectorSol)
+names(data)[5] <- "cluster"
+
+evaluatedSol <- evaluate(data)
+
 T = Tmax
 It <- 1
-ItLocal <- 1
+ItLocal <- 0
 stopCondition <- TRUE
 evaluatedSoles <- c(evaluatedSoles, evaluatedSol)
 bestEvaluatedSol <- c(bestEvaluatedSol, evaluatedSol)
 
+tic()
 while(stopCondition)
 {
     #Iteraciones interiores, son 10 antes de modificar la temperatura
     while(ItLocal < 10)
     {
+        ItLocal = ItLocal + 1
         #Take 2 samples
         sample1 <- sample(1:dataQuantity, 2)
             #hago swap de un numero empezando desde el principio
             #for(i in 1:length(sample1)){
         #Get neighbor swapping the two values of sample1
-        neighbor <- getNeighbor(swap, matrixSol, sample1[1], sample1[2])
+        neighbor <- getNeighbor(swap, vectorSol, sample1[1], sample1[2])
         #Evaluate new solution
-        evaluatedNeighbor <- evaluate(neighbor, data)
+        data[,5] <- neighbor
+        evaluatedNeighbor <- evaluate(data)
         #Si lo acepta, entonces cambia de solución
         if( acceptSolution(evaluatedSol, evaluatedNeighbor, T) ) { 
-            matrixSol <- neighbor 
+            vectorSol <- neighbor 
             evaluatedSol <- evaluatedNeighbor
             evaluatedSoles <- c(evaluatedSoles, evaluatedNeighbor)
             if( tail(bestEvaluatedSol, 1) < evaluatedNeighbor) {
@@ -205,34 +159,42 @@ while(stopCondition)
             break
         }
             #}
-        ItLocal = ItLocal + 1
     }
     #Cuando ya completa las iteraciones interiores, se modifican las temperaturas y las iteraciones actuales
-    T <- 0.5*T
+    T <- alpha*T
     It <- It + 1
-    ItLocal <- 1
-    if(T == 0 || It == ItMax) {  stopCondition <- FALSE }
+    ItLocal <- 0
+    print(It)
+    if(It == ItMax) {  stopCondition <- FALSE }
 }
+exectTime <- toc()
+exectTime <- 
 #Para este momento ya deberia tener una solución aceptable en la variable sol y todos los obtenidos en soles
-jpeg("img/graph.jpeg")
-plot(evaluatedSoles, main="Funcion objetivo clustering", xlab="Iteraciones", ylab="Valores")
+jpeg(paste("img/small/valoresFuncionObjetivo-T", Tmax, "-", "alpha", alpha, "0-200", ".jpeg", sep=""))
+plot(evaluatedSoles[1:50], main=paste("Funcion objetivo clustering, T",Tmax, "alpha", alpha), xlab="Iteraciones", ylab="Valores")
+lines(bestEvaluatedSol[1:50])
+dev.off()
+#Para este momento ya deberia tener una solución aceptable en la variable sol y todos los obtenidos en soles
+jpeg(paste("img/small/valoresFuncionObjetivo-T", Tmax, "-", "alpha", 0.75, "200-end", ".jpeg", sep=""))
+plot(evaluatedSoles, main=paste("Funcion objetivo clustering, T=",Tmax, "alpha", alpha), xlab="Iteraciones", ylab="Valores")
 lines(bestEvaluatedSol)
 dev.off()
 
-# Now there is an optimal saved in matrixSol. We need to separate the data
+# Now there is an optimal saved in vectorSol. We need to separate the data
 cluster <- c()
 for(i in 1:dataQuantity){
-    vector <- matrixSol[i,]
-    if(vector[1] == 1) { cluster <- c(cluster, 3) }
-    else if(vector[2] == 1) { cluster <- c(cluster, 1) }
+    if(data[i,5] == 1) { cluster <- c(cluster, 3) }
+    else if(data[i,5] == 3) { cluster <- c(cluster, 1) }
     else { cluster <- c(cluster, 2)}
 }
 
 #data$clustering <- cluster
-sa_clusters <- list(data=data, cluster=cluster)
-jpeg("img/clustersMH.jpeg")
+sa_clusters <- list(data=data[,1:4], cluster=cluster)
+jpeg(paste("img/small/clustersMH-S, T=",Tmax, "alpha", alpha, ".jpeg", sep=""))
 plot(fviz_cluster(object = sa_clusters, data = data, show.clust.cent = TRUE, ellipse.type = "t", geom="point") + 
-        labs(title = "Clustering con SA") + 
+        labs(title = paste("Clustering con SA, T", Tmax, "alpha", alpha)) + 
         theme_bw()
 )
 dev.off()
+
+write.table()
