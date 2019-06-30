@@ -106,8 +106,9 @@ data <- dataSeeds[,-c(2,4,5,8)]
 
 ## Constantes
 Tmax <- 10000
-ItMax <- 500
+ItMax <- 1000
 alpha <- 0.5
+tamano <- "small"
 evaluatedSoles <- c()
 bestEvaluatedSol <- c()
 dataQuantity <- nrow(data)
@@ -168,14 +169,15 @@ while(stopCondition)
     if(It == ItMax) {  stopCondition <- FALSE }
 }
 exectTime <- toc()
-exectTime <- 
+exectTime <- exectTime$toc - exectTime$tic
+
 #Para este momento ya deberia tener una solución aceptable en la variable sol y todos los obtenidos en soles
-jpeg(paste("img/small/valoresFuncionObjetivo-T", Tmax, "-", "alpha", alpha, "0-200", ".jpeg", sep=""))
+jpeg(paste("img/",tamano, "/valoresFuncionObjetivo-T", Tmax, "-", "alpha", alpha, "0-200", ".jpeg", sep=""))
 plot(evaluatedSoles[1:50], main=paste("Funcion objetivo clustering, T",Tmax, "alpha", alpha), xlab="Iteraciones", ylab="Valores")
 lines(bestEvaluatedSol[1:50])
 dev.off()
 #Para este momento ya deberia tener una solución aceptable en la variable sol y todos los obtenidos en soles
-jpeg(paste("img/small/valoresFuncionObjetivo-T", Tmax, "-", "alpha", 0.75, "200-end", ".jpeg", sep=""))
+jpeg(paste("img/",tamano,"/valoresFuncionObjetivo-T", Tmax, "-", "alpha", 0.75, "200-end", ".jpeg", sep=""))
 plot(evaluatedSoles, main=paste("Funcion objetivo clustering, T=",Tmax, "alpha", alpha), xlab="Iteraciones", ylab="Valores")
 lines(bestEvaluatedSol)
 dev.off()
@@ -190,11 +192,13 @@ for(i in 1:dataQuantity){
 
 #data$clustering <- cluster
 sa_clusters <- list(data=data[,1:4], cluster=cluster)
-jpeg(paste("img/small/clustersMH-S, T=",Tmax, "alpha", alpha, ".jpeg", sep=""))
+jpeg(paste("img/",tamano,"/clustersMH, T=",Tmax, "alpha", alpha, ".jpeg", sep=""))
 plot(fviz_cluster(object = sa_clusters, data = data, show.clust.cent = TRUE, ellipse.type = "t", geom="point") + 
         labs(title = paste("Clustering con SA, T", Tmax, "alpha", alpha)) + 
         theme_bw()
 )
 dev.off()
 
-write.table()
+write.table(t(vectorSol), paste("data/",tamano,"/vectorSolT", Tmax, "alpha", alpha, ".txt", sep=""))
+write.table(evaluatedSol, paste("data/",tamano,"/valueSolT", Tmax, "alpha", alpha, ".txt", sep=""))
+write.table(exectTime, paste("data/",tamano,"/execTime", Tmax, "alpha", alpha, ".txt", sep=""))
