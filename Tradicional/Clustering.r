@@ -13,9 +13,9 @@ euclideanDistance <- function(data, mean){
             )
 }
 
-evaluate <- function(clusters){
+evaluate <- function(Originaldata, clusters){
     #Se separan por clusters
-	data <- cbind(clusters$data, clusters$clustering)
+	data <- cbind(Originaldata, clusters$cluster)
 
 	dataCluster <- as.data.frame(data)
 	colnames(dataCluster)[5] <- "cluster"
@@ -72,7 +72,7 @@ finalData <- data[,-c(2,4,5,8)]
 
 #Se divide en 3 grupos y se hace el benchmark de lo que demora
 tic()
-clusters <- pam(finalData, diss = FALSE, k = 3)
+clusters <- kmeans(finalData, 3)
 extime <- toc()
 
 
@@ -90,11 +90,11 @@ extime <- as.data.frame(extime$toc - extime$tic)
 names(extime) <- "Execution time: "
 write.table(extime, paste("data/", tamano, ".txt", sep=""), append = FALSE, row.names=F, col.names=F)
 # value sol
-valueSol <- as.data.frame(evaluate(clusters))
+valueSol <- as.data.frame(evaluate(finalData, clusters))
 names(valueSol) <- "Valor final de la solucion"
 write.table(c(valueSol), paste("data/", tamano, ".txt", sep=""), append = TRUE, row.names=F, col.names=F)
 #vector sol
-vectorSol <- as.data.frame(clusters$clustering)
+vectorSol <- as.data.frame(clusters$cluster)
 names(vectorSol) <- "Vector solucion"
 write.table(vectorSol[,1], paste("data/", tamano, ".txt", sep=""), append = TRUE, row.names=F, col.names=F)
 
