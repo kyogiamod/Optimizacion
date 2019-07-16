@@ -179,6 +179,6 @@ dimnames(summaryMatrix) = list(
     )
 
 # Se guarda el archivo en formato latex, LOS RESULTADOS ESTAN DIVIDIDOS EN 10K PARA MEJOR VISUALIZACION 
-print(xtable(floor(summaryMatrix/10000), type = "latex"), file = "tablaVecindad/Reverse.tex")
+print(xtable(floor(summaryMatrix), type = "latex"), file = "tablaVecindad/Reverse.tex")
 
 write.table(toString(sol), "tablaVecindad/BestSolutionReverse.txt", sep="\t")
